@@ -3,26 +3,60 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# ---------------- Financial simulator ----------------
-def run_financial_sim(years,
-                      hw_unit_cost, hw_install_cost, hw_sale_price,
+# ---------- Base datasets ----------
+@st.cache_data(show_spinner=False)
+def load_state_market():
+    # Placeholder dataset; replace with census + EV-ready stats
+    return pd.DataFrame({
+        "state":["CA","TX","FL","NY","IL"],
+        "housing_units":[14000000,11000000,9600000,8300000,5200000]
+    })
+
+# ---------- Market sizing ----------
+def build_state_params(selected_states, years):
+    "Return dict state -> parameter dict with defaults"
+    params = {}
+    for s in selected_states:
+        params[s] = dict(
+            activation_delay=0,
+            ev_ready_pct=0.5,
+            attach_start=0.6,
+            attach_end=0.9
+        )
+    return params
+
+def calc_som_curve(df_states, state_params, panel_pct, start_pen, end_pen, years):
+    som_by_year = np.zeros(years)
+    pen_curve = np.linspace(start_pen, end_pen, years)
+    for state,row in df_states.set_index("state").loc[state_params.keys()].iterrows():
+        p = state_params[state]
+        tam = row["housing_units"] * panel_pct
+        sam = tam * p["ev_ready_pct"]
+        attach_curve = np.linspace(p["attach_start"], p["attach_end"], years)
+        for yr in range(years):
+            if yr < p["activation_delay"]:
+                continue
+            active_year = yr - p["activation_delay"]
+            som_by_year[yr] += sam * pen_curve[active_year] * attach_curve[active_year]
+    return som_by_year
+
+# ---------- Financial simulator ----------
+def run_financial_sim(years, hw_unit_cost, hw_install_cost, hw_sale_price,
                       hw_units_year1, hw_unit_growth,
-                      arr_per_site, attach_rate,
-                      loads_per_site, kwh_shift, spread, share,
+                      arr_per_site, loads_per_site, kwh_shift, spread, share,
                       mw_year1, mw_growth,
                       order_fee, gross_margin_target, core_ebitda_margin,
                       dev_total, dev_years,
-                      mult_ebitda, mult_rev):
+                      mult_ebitda, mult_rev,
+                      attach_rate_years):
     hw_units = hw_units_year1
     mw = mw_year1
     amort = dev_total / dev_years if dev_years else 0
     rows = []
-    for yr in range(1, years + 1):
+    for yr in range(years):
         hw_rev = hw_units * hw_sale_price
-
-        # SaaS + arbitrage only for attached sites
         sites = mw * 250
-        attached_sites = sites * attach_rate
+        attached_sites = sites * attach_rate_years[yr]
         saas_rev = attached_sites * arr_per_site
         arb_rev = attached_sites * loads_per_site * kwh_shift * 365 * spread * share
 
@@ -34,107 +68,117 @@ def run_financial_sim(years,
         ev_r = tot_rev * mult_rev if mult_rev else 0
         ev = ev_r if mult_rev else ev_e
 
-        rows.append(dict(Year=f"Year {{yr}}",
-                         HW_Units=hw_units,
-                         Total_Revenue=tot_rev,
-                         Reported_EBITDA=rpt_ebitda,
-                         Enterprise_Value=ev))
+        rows.append(dict(
+            Year=f"Year {yr+1}",
+            HW_Units=hw_units,
+            Total_Revenue=tot_rev,
+            Attach_Rate=attach_rate_years[yr],
+            Reported_EBITDA=rpt_ebitda,
+            Enterprise_Value=ev
+        ))
+
         hw_units = int(hw_units * (1 + hw_unit_growth))
         mw *= (1 + mw_growth)
     return pd.DataFrame(rows).set_index("Year")
 
-# -------------- Market sizing --------------
-@st.cache_data(show_spinner=False)
-def load_state_market():
-    return pd.DataFrame({
-        "state": ["CA","TX","FL","NY","IL"],
-        "housing_units":[14000000,11000000,9600000,8300000,5200000]
-    })
+# ---------- UI ----------
+st.set_page_config(page_title="Collar+Sub‑panel Model v5", layout="wide")
+sidebar = st.sidebar
+sidebar.title("Inputs")
 
-def calc_market(df_states, targets, panel_pct, ev_pct,
-                start_pen, end_pen, years, delay):
-    df = df_states[df_states.state.isin(targets)].copy()
-    df["TAM"] = df.housing_units * panel_pct
-    df["SAM"] = df.TAM * ev_pct
-    # Staggered activation: each additional state joins linearly over 'delay' years
-    active_states_curve = np.minimum(1.0,
-        np.arange(years)+1 / max(1, delay))
-    som_curve = np.linspace(start_pen, end_pen, years)
-    som_units_year = []
-    for yr in range(years):
-        active_fraction = active_states_curve[yr]
-        som_units_year.append(df["SAM"].sum()*som_curve[yr]*active_fraction)
-    return df, som_units_year
-
-# -------------- UI --------------
-st.set_page_config(page_title="Collar+Sub‑panel Model v4", layout="wide")
-s = st.sidebar
-s.title("Inputs (hover for help)")
-
-years = s.slider("Projection years",3,10,5)
+years = sidebar.slider("Projection years",3,10,5)
 
 # Hardware
-s.subheader("Hardware")
-hw_unit_cost = s.number_input("BOM + landing cost ($)",400.0,step=50.0,help="Cost to build and ship ONE collar + smart sub‑panel kit (before any profit).")
-hw_install_cost = s.number_input("Installer payment ($)",250.0,step=25.0,help="What we pay the electrician / channel partner per install.")
-hw_sale_price = s.number_input("Sale price to customer ($)",1500.0,step=50.0,help="Sticker price the homeowner pays for the hardware (kit only).")
-hw_units_year1 = s.number_input("Units shipped in Year 1",1000,step=100,help="How many kits we expect to ship in Year 1 of the projection.")
-hw_unit_growth = s.slider("Annual unit growth",0.0,1.0,0.4,help="Annual growth rate of hardware shipments. 0.6 = +60 % YoY.")
+sidebar.subheader("Hardware")
+hw_unit_cost = sidebar.number_input("BOM + landing cost ($)",400.0,step=50.0)
+hw_install_cost = sidebar.number_input("Installer payment ($)",250.0,step=25.0)
+hw_sale_price = sidebar.number_input("Sale price to customer ($)",1500.0,step=50.0)
+hw_units_year1 = sidebar.number_input("Units shipped in Year1",1000,step=100)
+hw_unit_growth = sidebar.slider("Annual unit growth",0.0,1.0,0.4)
 
 # Dev
-s.subheader("Dev & Cert")
-dev_total = s.number_input("Total dev cost ($)",2000000,step=100000,help="Total R&D + UL/FCC + app‑dev money spent upfront before selling units.")
-dev_years = s.slider("Amortization years",1,years,5,help="Over how many years we spread that dev cost in OpEx.")
+sidebar.subheader("Dev & Cert")
+dev_total = sidebar.number_input("Total dev cost ($)",2000000,step=100000)
+dev_years = sidebar.slider("Amortization years",1,years,5)
 
-# SaaS
-s.subheader("SaaS / DER")
-arr_per_site = s.number_input("ARR per site ($/yr)",120.0,step=10.0,help="Annual recurring revenue we charge each home for the software/HEMS service.")
-attach_rate = s.slider("SaaS attach rate",0.0,1.0,1.0,help="What fraction of installed panels actually subscribe to our SaaS/DER program.")
-loads_per_site = s.number_input("Loads per site",4,step=1,help="Average number of big controllable loads per house (EV, heat pump, etc.).")
-kwh_shift = s.number_input("kWh shift per load/day",3.0,step=0.5,help="How many kWh per load we can shift out of peak each day.")
-spread = s.number_input("Price spread ($/kWh)",0.05,step=0.01,help="Average price difference between peak and off‑peak electricity ($/kWh).")
-share = s.slider("Platform share",0.0,1.0,0.4,help="Our cut of the savings (0.4 = 40 %).")
+# SaaS constants
+sidebar.subheader("SaaS constants")
+arr_per_site = sidebar.number_input("ARR per site ($/yr)",120.0,step=10.0)
+loads_per_site = sidebar.number_input("Loads per site",4,step=1)
+kwh_shift = sidebar.number_input("kWh shift per load/day",3.0,step=0.5)
+spread = sidebar.number_input("Price spread ($/kWh)",0.05,step=0.01)
+share = sidebar.slider("Platform share",0.0,1.0,0.4)
 
-# Order 2222
-s.subheader("Aggregation")
-mw_year1 = s.number_input("MW Year 1",4.0,step=0.5,help="Flexible load capacity (MW) enrolled in aggregations in Year 1.")
-mw_growth = s.slider("MW growth",0.0,1.0,0.6,help="Growth rate of enrolled MW each year.")
-order_fee = s.number_input("Market fee ($/MWh)",1.0,step=0.5,help="All‑in Order 2222 market & settlement fees ($ per MWh dispatched).")
+# Aggregation
+sidebar.subheader("Aggregation")
+mw_year1 = sidebar.number_input("MW Year1",4.0,step=0.5)
+mw_growth = sidebar.slider("MW growth",0.0,1.0,0.6)
+order_fee = sidebar.number_input("Market fee ($/MWh)",1.0,step=0.5)
 
 # Finance
-s.subheader("Finance")
-gm = s.slider("Blended GM",0.0,0.9,0.35,help="Blended gross margin after COGS and 2222 fees.")
-ebitda_margin = s.slider("Core EBITDA margin",0.0,0.5,0.15,help="EBITDA margin BEFORE dev‑cost amortization.")
-mult_e = s.number_input("EV / EBITDA multiple",8.0,step=0.5,help="Multiple of EBITDA investors might pay (set 0 to ignore).")
-mult_r = s.number_input("EV / Revenue multiple",0.0,50.0,0.0,help="Multiple of Revenue investors might pay (set 0 to ignore).")
+sidebar.subheader("Finance")
+gm = sidebar.slider("Blended GM",0.0,0.9,0.35)
+ebitda_margin = sidebar.slider("Core EBITDA margin",0.0,0.5,0.15)
+mult_e = sidebar.number_input("EV / EBITDA multiple",8.0,step=0.5)
+mult_r = sidebar.number_input("EV / Revenue multiple",0.0,50.0,0.0)
 
-# GTM tab
-tab_fin, tab_gtm = st.tabs(["Financial","GTM & Market"])
+# Tabs
+tab_fin, tab_gtm = st.tabs(["Financial","GTM & Region Detail"])
 
 with tab_gtm:
     df_states = load_state_market()
-    targets = st.multiselect("Target states",df_states.state.tolist(),default=df_states.state.tolist()[:3])
+    all_states = df_states.state.tolist()
+    selected = st.multiselect("Target states",all_states,default=all_states[:3])
+    st.markdown("### Per‑state settings")
+    state_params = {}
+    for st_name in selected:
+        with st.expander(st_name):
+            delay = st.slider(f"Activation delay (years) – {st_name}",0,years-1,0,key=f"delay_{st_name}")
+            ev_pct = st.slider(f"EV‑ready % – {st_name}",0.0,1.0,0.5,key=f"ev_{st_name}")
+            attach_start = st.slider(f"Attach rate Year1 – {st_name}",0.0,1.0,0.6,key=f"as_{st_name}")
+            attach_end = st.slider(f"Attach rate Year{years} – {st_name}",0.0,1.0,0.9,key=f"ae_{st_name}")
+            state_params[st_name] = dict(
+                activation_delay=delay,
+                ev_ready_pct=ev_pct,
+                attach_start=attach_start,
+                attach_end=attach_end
+            )
     panel_pct = st.slider("% homes ≤100A",0.0,1.0,0.4)
-    ev_pct = st.slider("% EV-ready",0.0,1.0,0.5)
-    start_pen = st.number_input("Year1 SAM penetration %",0.0,100.0,0.5)/100
-    end_pen = st.number_input(f"Year{years} SAM penetration %",0.0,100.0,5.0)/100
-    region_delay = st.slider("Years for all regions to activate",1,years,3,help="Extra years before each additional target state opens up TOU incentives (linear ramp).")
+    start_pen = st.number_input("SAM penetration Year1 (%)",0.0,100.0,0.5)/100
+    end_pen = st.number_input(f"SAM penetration Year{years} (%)",0.0,100.0,5.0)/100
 
-    df_market,som_units_year = calc_market(df_states,targets,panel_pct,ev_pct,
-                                           start_pen,end_pen,years,region_delay)
-    st.dataframe(df_market.set_index("state").style.format("{:,.0f}"))
-    st.bar_chart(pd.DataFrame({"SOM_units":som_units_year}))
+    som_curve = calc_som_curve(df_states,state_params,panel_pct,start_pen,end_pen,years)
+    st.bar_chart(pd.DataFrame({"SOM_units":som_curve}))
 
 with tab_fin:
-    df = run_financial_sim(years,
-                           hw_unit_cost,hw_install_cost,hw_sale_price,
-                           hw_units_year1,hw_unit_growth,
-                           arr_per_site,attach_rate,
-                           loads_per_site,kwh_shift,spread,share,
-                           mw_year1,mw_growth,order_fee,
-                           gm,ebitda_margin,
-                           dev_total,dev_years,
-                           mult_e,mult_r)
-    st.dataframe(df.style.format("${:,.0f}"))
-    st.bar_chart(df["Total_Revenue"])
-    st.line_chart(df["Enterprise_Value"])
+    # derive attach rate each year (weighted avg)
+    total_sites_year = [mw_year1*(1+mw_growth)**yr*250 for yr in range(years)]
+    attach_sites_year = []
+    # compute global attach rate curve using SOM and total sites
+    attach_rate_curve = []
+    for yr in range(years):
+        active_sites = total_sites_year[yr]*share  # placeholder, will adjust later
+    # For simplicity: use average of state attach rates each year
+    attach_rate_years = []
+    for yr in range(years):
+        att=0
+        for st_name,p in state_params.items():
+            if yr < p["activation_delay"]:
+                continue
+            ys = np.linspace(p["attach_start"],p["attach_end"],years)
+            att += ys[yr]
+        attach_rate_years.append(att/len(state_params) if state_params else 0)
+
+    df_fin = run_financial_sim(years,
+                               hw_unit_cost,hw_install_cost,hw_sale_price,
+                               hw_units_year1,hw_unit_growth,
+                               arr_per_site,loads_per_site,kwh_shift,spread,share,
+                               mw_year1,mw_growth,order_fee,
+                               gm,ebitda_margin,
+                               dev_total,dev_years,
+                               mult_e,mult_r,
+                               attach_rate_years)
+
+    st.dataframe(df_fin.style.format("${:,.0f}"))
+    st.bar_chart(df_fin["Total_Revenue"])
+    st.line_chart(df_fin["Enterprise_Value"])
