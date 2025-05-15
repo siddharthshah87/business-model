@@ -90,37 +90,37 @@ years = sidebar.slider("Projection years",3,10,5)
 
 # Hardware
 sidebar.subheader("Hardware")
-hw_unit_cost = sidebar.number_input("BOM + landing cost ($)",400.0,step=50.0)
-hw_install_cost = sidebar.number_input("Installer payment ($)",250.0,step=25.0)
-hw_sale_price = sidebar.number_input("Sale price to customer ($)",1500.0,step=50.0)
-hw_units_year1 = sidebar.number_input("Units shipped in Year1",1000,step=100)
-hw_unit_growth = sidebar.slider("Annual unit growth",0.0,1.0,0.4)
+hw_unit_cost = sidebar.number_input("BOM + landing cost ($, help="ELI5: Cost to build + ship ONE collar + smart sub‑panel kit (before any profit).")
+hw_install_cost = sidebar.number_input("Installer payment ($, help="ELI5: Cash we hand the electrician or channel partner per installation.")
+hw_sale_price = sidebar.number_input("Sale price to customer ($, help="ELI5: Sticker price the homeowner pays for the hardware kit.")
+hw_units_year1 = sidebar.number_input("Units shipped in Year1",1000,step=100, help="ELI5: How many kits we expect to ship in the very first forecast year.")
+hw_unit_growth = sidebar.slider("Annual unit growth",0.0,1.0,0.4, help="ELI5: Annual percentage growth of shipments. 0.6 means +60 % every year.")
 
 # Dev
 sidebar.subheader("Dev & Cert")
-dev_total = sidebar.number_input("Total dev cost ($)",2000000,step=100000)
-dev_years = sidebar.slider("Amortization years",1,years,5)
+dev_total = sidebar.number_input("Total dev cost ($, help="ELI5: Total R&D, UL/FCC certification and app‑development spend before selling units.")
+dev_years = sidebar.slider("Amortization years",1,years,5, help="ELI5: Over how many years we ‘expense’ that big dev cost.")
 
 # SaaS constants
 sidebar.subheader("SaaS constants")
-arr_per_site = sidebar.number_input("ARR per site ($/yr)",120.0,step=10.0)
-loads_per_site = sidebar.number_input("Loads per site",4,step=1)
-kwh_shift = sidebar.number_input("kWh shift per load/day",3.0,step=0.5)
-spread = sidebar.number_input("Price spread ($/kWh)",0.05,step=0.01)
-share = sidebar.slider("Platform share",0.0,1.0,0.4)
+arr_per_site = sidebar.number_input("ARR per site ($/yr, help="ELI5: Yearly subscription fee each house pays for our software/VPP service.")
+loads_per_site = sidebar.number_input("Loads per site",4,step=1, help="ELI5: Big appliances per house we can control (EV, heat‑pump, water‑heater, dryer…).")
+kwh_shift = sidebar.number_input("kWh shift per load/day",3.0,step=0.5, help="ELI5: Energy (kWh) we can move off‑peak for each load every day.")
+spread = sidebar.number_input("Price spread ($/kWh, help="ELI5: Average $ difference between cheap off‑peak and pricey peak electricity.")
+share = sidebar.slider("Platform share",0.0,1.0,0.4, help="ELI5: Our cut of the savings. 0.4 = we keep 40 %, homeowner keeps 60 %.")
 
 # Aggregation
 sidebar.subheader("Aggregation")
-mw_year1 = sidebar.number_input("MW Year1",4.0,step=0.5)
-mw_growth = sidebar.slider("MW growth",0.0,1.0,0.6)
-order_fee = sidebar.number_input("Market fee ($/MWh)",1.0,step=0.5)
+mw_year1 = sidebar.number_input("MW Year1",4.0,step=0.5, help="ELI5: Flexible‑load capacity (in MW) we aggregate in the first year.")
+mw_growth = sidebar.slider("MW growth",0.0,1.0,0.6, help="ELI5: Annual growth rate of that MW portfolio.")
+order_fee = sidebar.number_input("Market fee ($/MWh, help="ELI5: All‑in cost we pay the ISO/utility for each MWh we bid into markets.")
 
 # Finance
 sidebar.subheader("Finance")
-gm = sidebar.slider("Blended GM",0.0,0.9,0.35)
-ebitda_margin = sidebar.slider("Core EBITDA margin",0.0,0.5,0.15)
-mult_e = sidebar.number_input("EV / EBITDA multiple",8.0,step=0.5)
-mult_r = sidebar.number_input("EV / Revenue multiple",0.0,50.0,0.0)
+gm = sidebar.slider("Blended GM",0.0,0.9,0.35, help="ELI5: % of revenue left after paying hardware COGS and 2222 fees.")
+ebitda_margin = sidebar.slider("Core EBITDA margin",0.0,0.5,0.15, help="ELI5: % of revenue left after ALL OpEx except amortized dev cost.")
+mult_e = sidebar.number_input("EV / EBITDA multiple",8.0,step=0.5, help="ELI5: How many times EBITDA investors might pay for the business.")
+mult_r = sidebar.number_input("EV / Revenue multiple",0.0,50.0,0.0, help="ELI5: How many times Revenue investors might pay (set to 0 to ignore).")
 
 # Tabs
 tab_fin, tab_gtm = st.tabs(["Financial","GTM & Region Detail"])
