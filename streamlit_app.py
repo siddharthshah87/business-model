@@ -90,7 +90,7 @@ years = sidebar.slider("Projection years",3,10,5)
 
 # Hardware
 sidebar.subheader("Hardware")
-hw_unit_cost = sidebar.number_input("BOM + landing cost ($, help="ELI5: Cost to build and ship ONE collar + smart subpanel kit (before any profit).")
+hw_unit_cost = sidebar.number_input("BOM + landing cost ($, help="ELI5: Cost to build and ship ONE collar and smart subpanel kit (before any profit).")
 hw_install_cost = sidebar.number_input("Installer payment ($, help="ELI5: Cash we hand the electrician or channel partner per installation.")
 hw_sale_price = sidebar.number_input("Sale price to customer ($, help="ELI5: Sticker price the homeowner pays for the hardware kit.")
 hw_units_year1 = sidebar.number_input("Units shipped in Year1",1000,step=100, help="ELI5: How many kits we expect to ship in the very first forecast year.")
