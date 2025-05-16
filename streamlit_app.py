@@ -98,7 +98,7 @@ hw_unit_growth = sidebar.slider("Annual unit growth",0.0,1.0,0.4, help="ELI5: An
 
 # Dev
 sidebar.subheader("Dev & Cert")
-dev_total = sidebar.number_input("Total dev cost ($, help="ELI5: Total R&D, UL/FCC certification and app‑development spend before selling units.")
+dev_total = sidebar.number_input("Total dev cost ($, help="ELI5: Total R&D, UL/FCC certification and app‑development spend before selling units.")")
 dev_years = sidebar.slider("Amortization years",1,years,5, help="ELI5: Over how many years we ‘expense’ that big dev cost.")
 
 # SaaS constants
