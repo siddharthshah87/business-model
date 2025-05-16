@@ -106,7 +106,7 @@ sidebar.subheader("SaaS constants")
 arr_per_site = sidebar.number_input("ARR per site ($/yr, help="ELI5: Yearly subscription fee each house pays for our software/VPP service.")")
 loads_per_site = sidebar.number_input("Loads per site",4,step=1, help="ELI5: Big appliances per house we can control (EV, heat‑pump, water‑heater, dryer…).")
 kwh_shift = sidebar.number_input("kWh shift per load/day",3.0,step=0.5, help="ELI5: Energy (kWh) we can move off‑peak for each load every day.")
-spread = sidebar.number_input("Price spread ($/kWh, help="ELI5: Average $ difference between cheap off‑peak and pricey peak electricity.")")
+spread = sidebar.number_input("Price spread ($/kWh, help="ELI5: Average $ difference between cheap offpeak and pricey peak electricity.")")
 share = sidebar.slider("Platform share",0.0,1.0,0.4, help="ELI5: Our cut of the savings. 0.4 = we keep 40 %, homeowner keeps 60 %.")
 
 # Aggregation
