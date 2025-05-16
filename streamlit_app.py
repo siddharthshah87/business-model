@@ -90,9 +90,9 @@ years = sidebar.slider("Projection years",3,10,5)
 
 # Hardware
 sidebar.subheader("Hardware")
-hw_unit_cost = sidebar.number_input("BOM + landing cost ($, help="ELI5: Cost to build and ship ONE collar and smart subpanel kit (before any profit).")
-hw_install_cost = sidebar.number_input("Installer payment ($, help="ELI5: Cash we hand the electrician or channel partner per installation.")
-hw_sale_price = sidebar.number_input("Sale price to customer ($, help="ELI5: Sticker price the homeowner pays for the hardware kit.")
+hw_unit_cost = sidebar.number_input("BOM + landing cost ($, help="ELI5: Cost to build and ship ONE collar and smart subpanel kit (before any profit).")")
+hw_install_cost = sidebar.number_input("Installer payment ($, help="ELI5: Cash we hand the electrician or channel partner per installation.")")
+hw_sale_price = sidebar.number_input("Sale price to customer ($, help="ELI5: Sticker price the homeowner pays for the hardware kit.")")
 hw_units_year1 = sidebar.number_input("Units shipped in Year1",1000,step=100, help="ELI5: How many kits we expect to ship in the very first forecast year.")
 hw_unit_growth = sidebar.slider("Annual unit growth",0.0,1.0,0.4, help="ELI5: Annual percentage growth of shipments. 0.6 means +60 % every year.")
 
@@ -103,10 +103,10 @@ dev_years = sidebar.slider("Amortization years",1,years,5, help="ELI5: Over how 
 
 # SaaS constants
 sidebar.subheader("SaaS constants")
-arr_per_site = sidebar.number_input("ARR per site ($/yr, help="ELI5: Yearly subscription fee each house pays for our software/VPP service.")
+arr_per_site = sidebar.number_input("ARR per site ($/yr, help="ELI5: Yearly subscription fee each house pays for our software/VPP service.")")
 loads_per_site = sidebar.number_input("Loads per site",4,step=1, help="ELI5: Big appliances per house we can control (EV, heat‑pump, water‑heater, dryer…).")
 kwh_shift = sidebar.number_input("kWh shift per load/day",3.0,step=0.5, help="ELI5: Energy (kWh) we can move off‑peak for each load every day.")
-spread = sidebar.number_input("Price spread ($/kWh, help="ELI5: Average $ difference between cheap off‑peak and pricey peak electricity.")
+spread = sidebar.number_input("Price spread ($/kWh, help="ELI5: Average $ difference between cheap off‑peak and pricey peak electricity.")")
 share = sidebar.slider("Platform share",0.0,1.0,0.4, help="ELI5: Our cut of the savings. 0.4 = we keep 40 %, homeowner keeps 60 %.")
 
 # Aggregation
