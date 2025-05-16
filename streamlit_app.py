@@ -113,7 +113,7 @@ share = sidebar.slider("Platform share",0.0,1.0,0.4, help="ELI5: Our cut of the 
 sidebar.subheader("Aggregation")
 mw_year1 = sidebar.number_input("MW Year1",4.0,step=0.5, help="ELI5: Flexible‑load capacity (in MW) we aggregate in the first year.")
 mw_growth = sidebar.slider("MW growth",0.0,1.0,0.6, help="ELI5: Annual growth rate of that MW portfolio.")
-order_fee = sidebar.number_input("Market fee ($/MWh, help="ELI5: All‑in cost we pay the ISO/utility for each MWh we bid into markets.")
+order_fee = sidebar.number_input("Market fee ($/MWh, help="ELI5: All in cost we pay the ISO/utility for each MWh we bid into markets.")
 
 # Finance
 sidebar.subheader("Finance")
