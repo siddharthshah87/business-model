@@ -97,7 +97,7 @@ gtm = side.selectbox("GTM Strategy", list(GTM_PROFILES.keys()))
 profile = GTM_PROFILES[gtm]
 
 hw_cost = side.number_input("BOM + Shipping", 400.0, step=25.0, help=HELP["bom"])
-install_cost = side.number_input("Installer Payment", profile["install_cost"], step=25.0, help=HELP["install"])
+install_cost = side.number_input("Installer Payment", float(profile["install_cost"]), step=25.0, help=HELP["install"])
 asp = side.number_input("Retail Price", 1500.0, step=50.0, help=HELP["asp"])
 units_y1 = side.number_input("Year 1 Units", 1000, step=100, help=HELP["units_y1"])
 unit_cagr = side.slider("Unit Growth Rate", 0.0, 1.0, 0.4, help=HELP["unit_cagr"])
