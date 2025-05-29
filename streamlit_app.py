@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -88,7 +89,7 @@ def run_financial(years, hw_cost, install_cost, asp, units_y1, unit_cagr,
     return pd.DataFrame(data).set_index("Year")
 
 # Streamlit App
-st.set_page_config(page_title="HEMS Business Model", layout="wide")
+st.set_page_config(page_title="HEMS + VPP Simulator", layout="wide")
 side = st.sidebar
 side.title("Inputs")
 
@@ -96,16 +97,16 @@ years = side.slider("Projection Years", 3, 10, 5)
 gtm = side.selectbox("GTM Strategy", list(GTM_PROFILES.keys()))
 profile = GTM_PROFILES[gtm]
 
-hw_cost = side.number_input("BOM + Shipping", 400.0, step=25.0, help=HELP["bom"])
-install_cost = side.number_input("Installer Payment", float(profile["install_cost"]), step=25.0, help=HELP["install"])
-asp = side.number_input("Retail Price", 1500.0, step=50.0, help=HELP["asp"])
-units_y1 = side.number_input("Year 1 Units", 1000, step=100, help=HELP["units_y1"])
-unit_cagr = side.slider("Unit Growth Rate", 0.0, 1.0, 0.4, help=HELP["unit_cagr"])
+hw_cost = side.number_input("BOM + Shipping", 400.0, step=25.0)
+install_cost = side.number_input("Installer Payment", profile["install_cost"], step=25.0)
+asp = side.number_input("Retail Price", 1500.0, step=50.0)
+units_y1 = side.number_input("Year 1 Units", 1000, step=100)
+unit_cagr = side.slider("Unit Growth Rate", 0.0, 1.0, 0.4)
 
 dev_total = side.number_input("Total Dev Cost", 2_000_000, step=100_000)
 dev_years = side.slider("Dev Amort Years", 1, years, 5)
 
-arr_site = side.number_input("SaaS ARR/site", 120.0, help=HELP["arr"])
+arr_site = side.number_input("SaaS ARR/site", 120.0)
 loads_site = side.number_input("Controllable Loads/site", 4)
 kwh_shift = side.number_input("kWh/Load/Day", 3.0)
 spread = side.number_input("TOU Spread $/kWh", 0.15)
