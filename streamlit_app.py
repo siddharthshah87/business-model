@@ -140,10 +140,18 @@ st.header("Revenue evolution")
 st.area_chart(df[["Hardware","VPP"]])
 
 st.header(f"Revenue mix Year {years}")
-mix=df.iloc[-1][["Hardware","VPP"]].reset_index().rename(columns={"index":"src",0:"val"})
-st.altair_chart(alt.Chart(mix).mark_arc(innerRadius=30).encode(
-    theta="val:Q",color="src:N",tooltip=["src","val"]
-),use_container_width=True)
+mix = df.iloc[-1][["Hardware","VPP"]].reset_index().rename(columns={"index":"src",0:"val"})
+
+pie = (
+    alt.Chart(mix)
+    .mark_arc(innerRadius=30)
+    .encode(
+        theta=alt.Theta(field="val", type="quantitative"),
+        color=alt.Color(field="src", type="nominal"),
+        tooltip=["src:N","val:Q"],
+    )
+)
+st.altair_chart(pie, use_container_width=True)
 
 st.subheader("Detail")
 st.dataframe(df.style.format("${:,.0f}"))
