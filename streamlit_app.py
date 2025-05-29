@@ -72,6 +72,8 @@ phase = side.selectbox("Business Phase", list(PHASES))
 iso  = side.selectbox("ISO Region", list(ISO_CAP_PRICE))
 years=side.slider("Projection horizon",5,10,7)
 
+units_y1 = side.number_input("Units shipped Year 1", 1_000, step=100, help="ELI5: first-year kits")  # <—
+
 # auto‑fill from phase preset but still editable
 asp0=side.number_input("Retail ASP ($)", value=PHASES[phase]["asp"],help=HELP["asp"])
 unit_cagr=side.slider("Unit CAGR",0.0,1.0,PHASES[phase]["unit_cagr"])
