@@ -30,6 +30,18 @@ SCEN = {
     "Bear": dict(asp=1500, g=0.25, tier=0),   # P10
 }
 
+# --- tiny IRR solver (no extra libs) ---------------------------------
+def irr(cflows, guess=0.1):
+    """Return IRR -- cash list must start with a negative outflow."""
+    r = guess
+    for _ in range(40):                          # Newton iterations
+        npv   = sum(cf / (1+r)**i for i, cf in enumerate(cflows))
+        d_npv = sum(-i*cf / (1+r)**(i+1) for i, cf in enumerate(cflows))
+        if abs(npv) < 1e-9 or d_npv == 0:
+            break
+        r -= npv / d_npv
+    return r*100
+
 # Helper
 def cap_price(iso, tier):      # tier = 0/1/2  ⇒  P10/P50/P90
     return ISO_CAP[iso][tier]
@@ -208,14 +220,3 @@ if st.button("Bear-stress (P10 cap, churn +5 %)"):
     st.warning("Bear-case revenue trajectory")
     st.line_chart(df_bear["Revenue"])
     
-# --- tiny IRR solver (no extra libs) ---------------------------------
-def irr(cflows, guess=0.1):
-    """Return IRR -- cash list must start with a negative outflow."""
-    r = guess
-    for _ in range(40):                          # Newton iterations
-        npv   = sum(cf / (1+r)**i for i, cf in enumerate(cflows))
-        d_npv = sum(-i*cf / (1+r)**(i+1) for i, cf in enumerate(cflows))
-        if abs(npv) < 1e-9 or d_npv == 0:
-            break
-        r -= npv / d_npv
-    return r*100
