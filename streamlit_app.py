@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import altair as alt
 from math import pow
-import numpy_financial as npf   # ← NEW
 
 st.set_page_config(page_title="HEMS → Grid Investor Simulator", layout="wide")
 st.title("🏠→⚡  Hardware-to-Grid Investor Simulator (multi-ISO)")
