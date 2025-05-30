@@ -148,9 +148,13 @@ enroll     = side.slider("Enrollment rate", 0.0, 1.0, 0.80)
 
 side.markdown("### ISO roll-out (enter **live** year)")
 roadmap = {}
-for iso in ISO_CAP:
+# ISO order we want to stagger (edit as you like)
+iso_sequence = ["CAISO", "ISO-NE", "NYISO", "PJM", "MISO"]
+
+for i, iso in enumerate(iso_sequence, start=0):          # i = 0 for CAISO
+    default_live = min(1 + i, years)                     # cap at final year
     roadmap[iso] = side.number_input(
-        f"{iso} live year", 1, years, value=1 if iso == "CAISO" else years
+        f"{iso} go-live year", 1, years, value=default_live
     )
 
 # ── Run simulation ───────────────────────────────────────
