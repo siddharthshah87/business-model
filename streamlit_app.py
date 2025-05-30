@@ -106,7 +106,7 @@ def simulate(
         )
         units = int(units * (1 + unit_cagr))
 
-    irr_val = np.irr([-abs(cash[0])] + cash[1:]) * 100 if len(cash) > 1 else float("nan")
+    irr_val = irr([-abs(cash[0])] + cash[1:]) * 100 if len(cash) > 1 else float("nan")
     return pd.DataFrame(rows).set_index("Year"), irr_val, cash
 
 
