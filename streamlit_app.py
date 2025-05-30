@@ -165,17 +165,16 @@ st.subheader("Revenue evolution")
 st.area_chart(df[["Hardware", "VPP"]])
 
 # Pie mix
-mix = df.iloc[-1][["Hardware", "VPP"]].astype(float).reset_index()
+mix = df.iloc[-1][["Hardware","VPP"]].astype(float).reset_index()
+mix.columns = ["Source", "Value"]
 pie = (
     alt.Chart(mix)
-    .mark_arc(innerRadius=30, stroke="white")
-    .encode(
-        theta="VPP:Q",
-        color="index:N",
-        tooltip=["index:N", alt.Tooltip("VPP:Q", format="$.0f")],
-    )
+        .mark_arc(innerRadius=30)
+        .encode(theta="Value:Q", color="Source:N",
+                tooltip=["Source:N", alt.Tooltip("Value:Q", format="$.0f")])
 )
 st.altair_chart(pie, use_container_width=True)
+
 
 # Table
 st.dataframe(df.style.format("${:,.0f}"))
@@ -209,3 +208,15 @@ if st.button("Bear-stress (P10 cap, churn +5 %)"):
     )
     st.warning("Bear-case revenue trajectory")
     st.line_chart(df_bear["Revenue"])
+    
+# --- tiny IRR solver (no extra libs) ---------------------------------
+def irr(cflows, guess=0.1):
+    """Return IRR -- cash list must start with a negative outflow."""
+    r = guess
+    for _ in range(40):                          # Newton iterations
+        npv   = sum(cf / (1+r)**i for i, cf in enumerate(cflows))
+        d_npv = sum(-i*cf / (1+r)**(i+1) for i, cf in enumerate(cflows))
+        if abs(npv) < 1e-9 or d_npv == 0:
+            break
+        r -= npv / d_npv
+    return r*100
