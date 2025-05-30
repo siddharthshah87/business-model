@@ -144,7 +144,7 @@ installer  = side.number_input("Installer fee $", 300)
 marketing  = side.number_input("Marketing $ per sale", 200)
 gm         = side.slider("Initial HW gross-margin", 0.0, 1.0, 0.35)
 disc       = side.slider("Discount rate", 0.05, 0.20, 0.10)
-enroll     = st.sidebar.slider("Enrollment rate", 0.0, 1.0, 0.80)
+enroll     = side.slider("Enrollment rate", 0.0, 1.0, 0.80)
 
 side.markdown("### ISO roll-out (enter **live** year)")
 roadmap = {}
